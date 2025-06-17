@@ -23,7 +23,7 @@ const PropertyTaxCalculator = () => {
     isSingleHousehold: false,
     regionalResourceTaxStandard: 0,
     multiUnits: [],
-    reductionType: "",
+    reductionType: "감면 없음",
     currentYearReductionRate: 0,
     taxBurdenCapRate: 110,
     taxStandardCapRate: 5,
@@ -268,6 +268,27 @@ const PropertyTaxCalculator = () => {
             <h3 className="text-lg font-semibold text-blue-800">세율 및 상한 설정</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">감면 유형</Label>
+                <Select
+                  value={propertyData.reductionType}
+                  onValueChange={(value) => setPropertyData(prev => ({
+                    ...prev,
+                    reductionType: value
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="감면 유형을 선택하세요" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="감면 없음">감면 없음</SelectItem>
+                    <SelectItem value="임대주택">임대주택</SelectItem>
+                    <SelectItem value="전세사기 감면">전세사기 감면</SelectItem>
+                    <SelectItem value="노후연금">노후연금</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">당해연도 감면율 (%)</Label>
                 <Input
