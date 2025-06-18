@@ -24,6 +24,7 @@ const PropertyTaxCalculator = () => {
     regionalResourceTaxStandard: 0,
     multiUnits: [],
     reductionType: "감면 없음",
+    rentalHousingArea: 0,
     currentYearReductionRate: 0,
     taxBurdenCapRate: 110,
     taxStandardCapRate: 5,
@@ -267,14 +268,16 @@ const PropertyTaxCalculator = () => {
           <div className="space-y-6 border rounded-lg p-6 bg-blue-50">
             <h3 className="text-lg font-semibold text-blue-800">세율 및 상한 설정</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">감면 유형</Label>
                 <Select
                   value={propertyData.reductionType}
                   onValueChange={(value) => setPropertyData(prev => ({
                     ...prev,
-                    reductionType: value
+                    reductionType: value,
+                    rentalHousingArea: value === "임대주택" ? 0 : 0,
+                    currentYearReductionRate: value === "전세사기 감면" ? 50 : value === "노후연금" ? 25 : 0
                   }))}
                 >
                   <SelectTrigger>
@@ -289,19 +292,80 @@ const PropertyTaxCalculator = () => {
                 </Select>
               </div>
               
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">당해연도 감면율 (%)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={propertyData.currentYearReductionRate || ""}
-                  onChange={(e) => setPropertyData(prev => ({
-                    ...prev,
-                    currentYearReductionRate: Number(e.target.value)
-                  }))}
-                />
-              </div>
+              {propertyData.reductionType === "임대주택" && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700">전용면적 (㎡)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="전용면적을 입력하세요"
+                      value={propertyData.rentalHousingArea || ""}
+                      onChange={(e) => {
+                        const area = Number(e.target.value);
+                        let reductionRate = 0;
+                        
+                        if (area > 0 && area <= 40) {
+                          reductionRate = 100;
+                        } else if (area > 40 && area <= 60) {
+                          reductionRate = 75;
+                        } else if (area > 60) {
+                          reductionRate = 50;
+                        }
+                        
+                        setPropertyData(prev => ({
+                          ...prev,
+                          rentalHousingArea: area,
+                          currentYearReductionRate: reductionRate
+                        }));
+                      }}
+                      className="text-lg"
+                    />
+                  </div>
+                  
+                  {propertyData.rentalHousingArea && propertyData.rentalHousingArea > 0 && (
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-blue-800">
+                          {propertyData.rentalHousingArea <= 40 && "전용 40㎡ 이하"}
+                          {propertyData.rentalHousingArea > 40 && propertyData.rentalHousingArea <= 60 && "전용 40㎡초과 60㎡이하"}
+                          {propertyData.rentalHousingArea > 60 && "전용 60㎡초과"}
+                        </span>
+                        <span className="text-lg font-bold text-blue-700">
+                          감면율: {propertyData.currentYearReductionRate}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {propertyData.reductionType === "전세사기 감면" && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-blue-800">
+                      전세사기 감면
+                    </span>
+                    <span className="text-lg font-bold text-blue-700">
+                      감면율: 50%
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {propertyData.reductionType === "노후연금" && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-blue-800">
+                      노후연금
+                    </span>
+                    <span className="text-lg font-bold text-blue-700">
+                      감면율: 25%
+                    </span>
+                  </div>
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">세부담상한율 (%)</Label>

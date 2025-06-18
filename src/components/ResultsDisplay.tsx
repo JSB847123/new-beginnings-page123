@@ -136,7 +136,65 @@ const ResultsDisplay = ({ result, propertyData, marketValueRatio, showAdvanced }
     explanation += "6. 지역자원시설세 계산\n";
     const regionalResourceTaxStandard = propertyData.regionalResourceTaxStandard || result.taxableStandard;
     explanation += `- 지역자원시설세 과세표준: ${formatCurrency(regionalResourceTaxStandard)}원\n`;
-    explanation += `- 소유비율 적용 후 지역자원시설세: ${formatCurrency(result.regionalResourceTax)}원\n\n`;
+    
+    if (propertyData.regionalResourceTaxStandard) {
+      explanation += `  (입력된 지역자원시설세 과세표준 적용)\n`;
+    } else {
+      explanation += `  (재산세 과세표준과 동일 적용)\n`;
+    }
+    
+    // 구간별 세율 적용 설명
+    let regionalTaxDesc = "";
+    let regionalBaseTax = 0;
+    
+    if (regionalResourceTaxStandard <= 6000000) {
+      regionalTaxDesc = "600만원 이하: 과세표준 × 4/10,000";
+      regionalBaseTax = regionalResourceTaxStandard * 0.0004;
+    } else if (regionalResourceTaxStandard <= 13000000) {
+      regionalTaxDesc = "600만원 초과 ~ 1,300만원 이하: 2,400원 + (600만원 초과금액 × 5/10,000)";
+      regionalBaseTax = 2400 + (regionalResourceTaxStandard - 6000000) * 0.0005;
+    } else if (regionalResourceTaxStandard <= 26000000) {
+      regionalTaxDesc = "1,300만원 초과 ~ 2,600만원 이하: 5,900원 + (1,300만원 초과금액 × 6/10,000)";
+      regionalBaseTax = 5900 + (regionalResourceTaxStandard - 13000000) * 0.0006;
+    } else if (regionalResourceTaxStandard <= 39000000) {
+      regionalTaxDesc = "2,600만원 초과 ~ 3,900만원 이하: 13,700원 + (2,600만원 초과금액 × 8/10,000)";
+      regionalBaseTax = 13700 + (regionalResourceTaxStandard - 26000000) * 0.0008;
+    } else if (regionalResourceTaxStandard <= 64000000) {
+      regionalTaxDesc = "3,900만원 초과 ~ 6,400만원 이하: 24,100원 + (3,900만원 초과금액 × 10/10,000)";
+      regionalBaseTax = 24100 + (regionalResourceTaxStandard - 39000000) * 0.001;
+    } else {
+      regionalTaxDesc = "6,400만원 초과: 49,100원 + (6,400만원 초과금액 × 12/10,000)";
+      regionalBaseTax = 49100 + (regionalResourceTaxStandard - 64000000) * 0.0012;
+    }
+    
+    explanation += `- 세율 적용: ${regionalTaxDesc}\n`;
+    explanation += `- 세율 적용 후 세액: ${formatCurrency(regionalBaseTax)}원\n`;
+    
+    // 소유비율 적용
+    const regionalTaxAfterOwnership = regionalBaseTax * (propertyData.ownershipRatio / 100);
+    explanation += `- 소유비율 적용: ${formatCurrency(regionalBaseTax)} × ${propertyData.ownershipRatio}% = ${formatCurrency(regionalTaxAfterOwnership)}원\n`;
+    
+    // 1세대 1주택 특례 적용
+    if (propertyData.isSingleHousehold) {
+      const regionalTaxAfterSingleHouseholdDiscount = regionalTaxAfterOwnership * 0.5;
+      explanation += `- 1세대 1주택 특례 적용: ${formatCurrency(regionalTaxAfterOwnership)} × 50% = ${formatCurrency(regionalTaxAfterSingleHouseholdDiscount)}원\n`;
+    }
+    
+    // 감면율 적용 (있는 경우)
+    if (propertyData.currentYearReductionRate > 0) {
+      const regionalBaseAmount = propertyData.isSingleHousehold ? regionalTaxAfterOwnership * 0.5 : regionalTaxAfterOwnership;
+      const regionalFinalAmount = regionalBaseAmount * (1 - propertyData.currentYearReductionRate / 100);
+      explanation += `- 감면율 적용: ${formatCurrency(regionalBaseAmount)} × (1 - ${propertyData.currentYearReductionRate}%) = ${formatCurrency(regionalFinalAmount)}원\n`;
+    }
+    
+    // 10원 미만 절사
+    explanation += `- 10원 미만 절사 후 최종 지역자원시설세: ${formatCurrency(result.regionalResourceTax)}원\n`;
+    
+    if (result.regionalResourceTax < 1000) {
+      explanation += `- 소액 징수면제: 1,000원 미만으로 징수면제 적용\n`;
+    }
+    
+    explanation += "\n";
     
     // 7. 최종 합계
     explanation += "7. 최종 재산세 총액\n";
@@ -520,14 +578,84 @@ const ResultsDisplay = ({ result, propertyData, marketValueRatio, showAdvanced }
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">6. 지역자원시설세 계산</h3>
               <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <span className="text-sm text-gray-600 block mb-1">지역자원시설세 과세표준</span>
-                  <p className="text-gray-700">{formatCurrency(propertyData.regionalResourceTaxStandard || result.taxableStandard)}원</p>
-                </div>
-                <div className="bg-gray-100 p-4 rounded-lg border border-gray-300">
-                  <span className="text-sm text-gray-600 block mb-1">소유비율 적용 후 지역자원시설세</span>
-                  <p className="font-bold text-gray-800 text-lg">{formatCurrency(result.regionalResourceTax)}원</p>
-                </div>
+                {(() => {
+                  const regionalResourceTaxStandard = propertyData.regionalResourceTaxStandard || result.taxableStandard;
+                  let regionalTaxRateDescription = "";
+                  let regionalBaseTaxAmount = 0;
+                  
+                  if (regionalResourceTaxStandard <= 6000000) {
+                    regionalTaxRateDescription = "600만원 이하: 과세표준 × 4/10,000";
+                    regionalBaseTaxAmount = regionalResourceTaxStandard * 0.0004;
+                  } else if (regionalResourceTaxStandard <= 13000000) {
+                    regionalTaxRateDescription = "600만원 초과 ~ 1,300만원 이하: 2,400원 + (600만원 초과금액 × 5/10,000)";
+                    regionalBaseTaxAmount = 2400 + (regionalResourceTaxStandard - 6000000) * 0.0005;
+                  } else if (regionalResourceTaxStandard <= 26000000) {
+                    regionalTaxRateDescription = "1,300만원 초과 ~ 2,600만원 이하: 5,900원 + (1,300만원 초과금액 × 6/10,000)";
+                    regionalBaseTaxAmount = 5900 + (regionalResourceTaxStandard - 13000000) * 0.0006;
+                  } else if (regionalResourceTaxStandard <= 39000000) {
+                    regionalTaxRateDescription = "2,600만원 초과 ~ 3,900만원 이하: 13,700원 + (2,600만원 초과금액 × 8/10,000)";
+                    regionalBaseTaxAmount = 13700 + (regionalResourceTaxStandard - 26000000) * 0.0008;
+                  } else if (regionalResourceTaxStandard <= 64000000) {
+                    regionalTaxRateDescription = "3,900만원 초과 ~ 6,400만원 이하: 24,100원 + (3,900만원 초과금액 × 10/10,000)";
+                    regionalBaseTaxAmount = 24100 + (regionalResourceTaxStandard - 39000000) * 0.001;
+                  } else {
+                    regionalTaxRateDescription = "6,400만원 초과: 49,100원 + (6,400만원 초과금액 × 12/10,000)";
+                    regionalBaseTaxAmount = 49100 + (regionalResourceTaxStandard - 64000000) * 0.0012;
+                  }
+                  
+                  const regionalTaxAfterOwnership = regionalBaseTaxAmount * (propertyData.ownershipRatio / 100);
+                  
+                  return (
+                    <>
+                      <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+                        <span className="text-sm text-gray-600 block mb-1">지역자원시설세 과세표준 확정</span>
+                        <p className="text-gray-700">
+                          {formatCurrency(regionalResourceTaxStandard)}원{" "}
+                          {propertyData.regionalResourceTaxStandard ? "(입력된 지역자원시설세 과세표준 적용)" : "(재산세 과세표준과 동일 적용)"}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+                        <span className="text-sm text-gray-600 block mb-1">구간별 세율 적용</span>
+                        <p className="text-gray-700">{regionalTaxRateDescription}</p>
+                        <p className="text-gray-700">세액: {formatCurrency(regionalBaseTaxAmount)}원</p>
+                      </div>
+                      
+                      <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+                        <span className="text-sm text-gray-600 block mb-1">소유비율 적용</span>
+                        <p className="text-gray-700">
+                          {formatCurrency(regionalBaseTaxAmount)}원 × {propertyData.ownershipRatio}% = {formatCurrency(regionalTaxAfterOwnership)}원
+                        </p>
+                      </div>
+                      
+                      {propertyData.isSingleHousehold && (
+                        <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+                          <span className="text-sm text-gray-600 block mb-1">1세대 1주택 특례 적용</span>
+                          <p className="text-gray-700">
+                            {formatCurrency(regionalTaxAfterOwnership)}원 × 50% = {formatCurrency(regionalTaxAfterOwnership * 0.5)}원
+                          </p>
+                        </div>
+                      )}
+                      
+                      {propertyData.currentYearReductionRate > 0 && (
+                        <div className="bg-cyan-50 p-4 rounded-lg border border-cyan-200">
+                          <span className="text-sm text-gray-600 block mb-1">감면율 적용</span>
+                          <p className="text-gray-700">
+                            감면 대상시 {propertyData.currentYearReductionRate}% 감면 적용
+                          </p>
+                        </div>
+                      )}
+                      
+                      <div className="bg-cyan-100 p-4 rounded-lg border border-cyan-300">
+                        <span className="text-sm text-gray-600 block mb-1">최종 지역자원시설세 (10원 미만 절사)</span>
+                        <p className="font-bold text-gray-800 text-lg">
+                          {formatCurrency(result.regionalResourceTax)}원
+                          {result.regionalResourceTax < 1000 && " (소액 징수면제 적용)"}
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 

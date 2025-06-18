@@ -34,6 +34,7 @@ export interface PropertyData {
   regionalResourceTaxStandard: number;
   multiUnits: MultiUnitData[];
   reductionType: string;
+  rentalHousingArea?: number; // 임대주택 전용면적 (㎡)
   currentYearReductionRate: number;
   taxBurdenCapRate: number;
   taxStandardCapRate: number;
