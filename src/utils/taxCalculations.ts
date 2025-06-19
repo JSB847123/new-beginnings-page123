@@ -1,4 +1,3 @@
-
 import { PropertyData, PreviousYearData, MultiUnitData, PreviousYearMultiUnitData } from "@/types/propertyTax";
 
 // 공정시장가액비율 계산
@@ -61,16 +60,26 @@ export const calculatePropertyTaxForStandard = (taxableStandard: number, isSingl
   }
 };
 
-// 표준세율 계산
+// 표준세율 계산 - 수정된 로직
 export const calculateStandardPropertyTax = (taxableStandard: number): number => {
+  console.log(`표준세율 계산: 과세표준 ${taxableStandard}원`);
+  
   if (taxableStandard <= 60000000) {
-    return taxableStandard * 0.001;
+    const result = taxableStandard * 0.001;
+    console.log(`6천만원 이하: ${taxableStandard} × 0.001 = ${result}`);
+    return result;
   } else if (taxableStandard <= 150000000) {
-    return taxableStandard * 0.0015 - 30000;
+    const result = taxableStandard * 0.0015 - 30000;
+    console.log(`6천만원 초과 1억5천만원 이하: ${taxableStandard} × 0.0015 - 30,000 = ${result}`);
+    return result;
   } else if (taxableStandard <= 300000000) {
-    return taxableStandard * 0.0025 - 180000;
+    const result = taxableStandard * 0.0025 - 180000;
+    console.log(`1억5천만원 초과 3억원 이하: ${taxableStandard} × 0.0025 - 180,000 = ${result}`);
+    return result;
   } else {
-    return taxableStandard * 0.004 - 630000;
+    const result = taxableStandard * 0.004 - 630000;
+    console.log(`3억원 초과: ${taxableStandard} × 0.004 - 630,000 = ${result}`);
+    return result;
   }
 };
 
