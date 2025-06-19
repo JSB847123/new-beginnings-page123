@@ -1,4 +1,3 @@
-
 import { PropertyData, PreviousYearData, MultiUnitData, PreviousYearMultiUnitData } from "@/types/propertyTax";
 
 // 공정시장가액비율 계산
