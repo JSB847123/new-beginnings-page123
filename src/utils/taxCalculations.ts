@@ -1,3 +1,4 @@
+
 import { PropertyData, PreviousYearData, MultiUnitData, PreviousYearMultiUnitData } from "@/types/propertyTax";
 
 // 공정시장가액비율 계산
@@ -35,28 +36,48 @@ export const calculateTaxableStandardWithCap = (
   };
 };
 
-// 재산세 본세 계산 (일반 주택)
+// 재산세 본세 계산 (일반 주택) - 간이세율 적용
 export const calculatePropertyTaxForStandard = (taxableStandard: number, isSingleHousehold: boolean, publicPrice: number): number => {
+  console.log(`재산세 본세 계산: 과세표준 ${taxableStandard}원, 1세대1주택: ${isSingleHousehold}`);
+  
   if (isSingleHousehold && publicPrice <= 900000000) {
+    // 1세대 1주택 특례세율
     if (taxableStandard <= 60000000) {
-      return taxableStandard * 0.0005;
+      const result = taxableStandard * 0.0005;
+      console.log(`1세대1주택 6천만원 이하: ${taxableStandard} × 0.0005 = ${result}`);
+      return result;
     } else if (taxableStandard <= 150000000) {
-      return taxableStandard * 0.001 - 30000;
+      const result = taxableStandard * 0.001 - 30000;
+      console.log(`1세대1주택 6천만원 초과 1.5억원 이하: ${taxableStandard} × 0.001 - 30,000 = ${result}`);
+      return result;
     } else if (taxableStandard <= 300000000) {
-      return taxableStandard * 0.002 - 180000;
+      const result = taxableStandard * 0.002 - 180000;
+      console.log(`1세대1주택 1.5억원 초과 3억원 이하: ${taxableStandard} × 0.002 - 180,000 = ${result}`);
+      return result;
     } else {
-      return taxableStandard * 0.0035 - 630000;
+      const result = taxableStandard * 0.0035 - 630000;
+      console.log(`1세대1주택 3억원 초과: ${taxableStandard} × 0.0035 - 630,000 = ${result}`);
+      return result;
     }
   }
   
+  // 1세대 1주택이 아닌 경우 - 간이세율 적용
   if (taxableStandard <= 60000000) {
-    return taxableStandard * 0.001;
+    const result = taxableStandard * 0.001;
+    console.log(`일반 6천만원 이하 (간이세율): ${taxableStandard} × 0.001 = ${result}`);
+    return result;
   } else if (taxableStandard <= 150000000) {
-    return taxableStandard * 0.0015 - 30000;
+    const result = taxableStandard * 0.0015 - 30000;
+    console.log(`일반 6천만원 초과 1.5억원 이하 (간이세율): ${taxableStandard} × 0.0015 - 30,000 = ${result}`);
+    return result;
   } else if (taxableStandard <= 300000000) {
-    return taxableStandard * 0.0025 - 180000;
+    const result = taxableStandard * 0.0025 - 180000;
+    console.log(`일반 1.5억원 초과 3억원 이하 (간이세율): ${taxableStandard} × 0.0025 - 180,000 = ${result}`);
+    return result;
   } else {
-    return taxableStandard * 0.004 - 630000;
+    const result = taxableStandard * 0.004 - 630000;
+    console.log(`일반 3억원 초과 (간이세율): ${taxableStandard} × 0.004 - 630,000 = ${result}`);
+    return result;
   }
 };
 
