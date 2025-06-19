@@ -188,9 +188,9 @@ const PropertyTaxCalculator = () => {
               </Select>
             </div>
 
-            {/* 1세대 1주택 여부 */}
+            {/* 1세대 1주택 여부 - Updated with larger and bolder text */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">1세대 1주택입니까?</Label>
+              <Label className="text-lg font-bold text-gray-700">1세대 1주택입니까?</Label>
               <RadioGroup
                 value={singleHouseholdSelected === null ? "" : singleHouseholdSelected ? "yes" : "no"}
                 onValueChange={(value) => setSingleHouseholdSelected(value === "yes")}
@@ -198,17 +198,16 @@ const PropertyTaxCalculator = () => {
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="yes" id="yes" />
-                  <Label htmlFor="yes">예</Label>
+                  <Label htmlFor="yes" className="text-lg font-bold">예</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="no" id="no" />
-                  <Label htmlFor="no">아니오</Label>
+                  <Label htmlFor="no" className="text-lg font-bold">아니오</Label>
                 </div>
               </RadioGroup>
             </div>
           </div>
 
-          {/* 다가구주택 구별 과세표준 입력 */}
           {propertyData.propertyType === "다가구주택" && (
             <MultiUnitInputs
               units={propertyData.multiUnits}
@@ -219,7 +218,6 @@ const PropertyTaxCalculator = () => {
             />
           )}
 
-          {/* 일반 주택 공시가격 입력 */}
           {propertyData.propertyType && propertyData.propertyType !== "다가구주택" && (
             <div className="space-y-2">
               <Label htmlFor="publicPrice" className="text-sm font-medium text-gray-700">
@@ -240,7 +238,6 @@ const PropertyTaxCalculator = () => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 소유비율 */}
             <div className="space-y-2">
               <Label htmlFor="ownershipRatio" className="text-sm font-medium text-gray-700">
                 소유비율 (%)
@@ -259,7 +256,6 @@ const PropertyTaxCalculator = () => {
               />
             </div>
 
-            {/* 지역자원시설세 과세표준 (일반 주택만) */}
             {propertyData.propertyType && propertyData.propertyType !== "다가구주택" && (
               <div className="space-y-2">
                 <Label htmlFor="regionalResourceTaxStandard" className="text-sm font-medium text-gray-700">
@@ -280,7 +276,6 @@ const PropertyTaxCalculator = () => {
             )}
           </div>
 
-          {/* 세율 및 상한 설정 */}
           <div className="space-y-6 border rounded-lg p-6 bg-blue-50">
             <h3 className="text-lg font-semibold text-blue-800">세율 및 상한 설정</h3>
             
@@ -411,11 +406,9 @@ const PropertyTaxCalculator = () => {
             </div>
           </div>
 
-          {/* 전년도 정보 */}
           <div className="space-y-6 border rounded-lg p-6 bg-green-50">
             <h3 className="text-lg font-semibold text-green-800">전년도 정보</h3>
             
-            {/* 전년도 다가구주택 구별 입력 */}
             {propertyData.propertyType === "다가구주택" && (
               <MultiUnitInputs
                 units={propertyData.previousYear.multiUnits}
@@ -426,7 +419,6 @@ const PropertyTaxCalculator = () => {
               />
             )}
             
-            {/* 전년도 일반 주택 정보 */}
             {propertyData.propertyType !== "다가구주택" && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
@@ -560,7 +552,6 @@ const PropertyTaxCalculator = () => {
         </CardContent>
       </Card>
 
-      {/* 결과 표시 */}
       {result && (
         <ResultsDisplay 
           result={result} 
@@ -570,7 +561,6 @@ const PropertyTaxCalculator = () => {
         />
       )}
 
-      {/* 계산 단계 설명 */}
       <CalculationSteps />
     </div>
   );
