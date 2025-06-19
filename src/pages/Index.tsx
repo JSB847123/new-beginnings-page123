@@ -1,3 +1,4 @@
+
 import PropertyTaxCalculator from "@/components/PropertyTaxCalculator";
 
 const Index = () => {
