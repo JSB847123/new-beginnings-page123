@@ -13,8 +13,11 @@ import { PropertyData, CalculationResult, MultiUnitData, PreviousYearMultiUnitDa
 import { calculateMarketValueRatio } from "@/utils/taxCalculations";
 import { formatNumberWithCommas, parseNumberFromInput } from "@/utils/formatUtils";
 import { performTaxCalculation } from "@/utils/mainTaxCalculation";
+import { useToast } from "@/hooks/use-toast";
 
 const PropertyTaxCalculator = () => {
+  const { toast } = useToast();
+  
   const initialPropertyData: PropertyData = {
     propertyType: "",
     publicPrice: 0,
@@ -45,10 +48,12 @@ const PropertyTaxCalculator = () => {
 
   const [propertyData, setPropertyData] = useState<PropertyData>(initialPropertyData);
   const [result, setResult] = useState<CalculationResult | null>(null);
+  const [singleHouseholdSelected, setSingleHouseholdSelected] = useState<boolean | null>(null);
 
   const resetCalculator = () => {
     setPropertyData(initialPropertyData);
     setResult(null);
+    setSingleHouseholdSelected(null);
   };
 
   const addMultiUnit = () => {
@@ -109,7 +114,21 @@ const PropertyTaxCalculator = () => {
   };
 
   const calculateTax = () => {
-    const calculationResult = performTaxCalculation(propertyData);
+    if (singleHouseholdSelected === null) {
+      toast({
+        title: "입력 오류",
+        description: "1세대 1주택 여부를 선택하시오.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedPropertyData = {
+      ...propertyData,
+      isSingleHousehold: singleHouseholdSelected
+    };
+    
+    const calculationResult = performTaxCalculation(updatedPropertyData);
     setResult(calculationResult);
   };
 
@@ -173,11 +192,8 @@ const PropertyTaxCalculator = () => {
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-700">1세대 1주택입니까?</Label>
               <RadioGroup
-                value={propertyData.isSingleHousehold ? "yes" : "no"}
-                onValueChange={(value) => setPropertyData(prev => ({
-                  ...prev,
-                  isSingleHousehold: value === "yes"
-                }))}
+                value={singleHouseholdSelected === null ? "" : singleHouseholdSelected ? "yes" : "no"}
+                onValueChange={(value) => setSingleHouseholdSelected(value === "yes")}
                 className="flex gap-6"
               >
                 <div className="flex items-center space-x-2">
@@ -549,7 +565,7 @@ const PropertyTaxCalculator = () => {
         <ResultsDisplay 
           result={result} 
           propertyData={propertyData}
-          marketValueRatio={propertyData.propertyType === "다가구주택" ? 0 : calculateMarketValueRatio(propertyData.publicPrice, propertyData.isSingleHousehold)}
+          marketValueRatio={propertyData.propertyType === "다가구주택" ? 0 : calculateMarketValueRatio(propertyData.publicPrice, singleHouseholdSelected || false)}
           showAdvanced={true}
         />
       )}
